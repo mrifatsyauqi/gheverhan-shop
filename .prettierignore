@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+build
+coverage
+package-lock.json
+
+# project docs authored outside this Prettier setup, not app code
+*.md
+.claude/
