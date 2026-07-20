@@ -12,3 +12,61 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String? // WAJIB di-hash pakai bcrypt sebelum disimpan, JANGAN plain text
+  role      String   @default("customer") // customer | admin
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  products Product[]
+}
+
+model Product {
+  id         String         @id @default(cuid())
+  name       String
+  slug       String         @unique
+  price      Int
+  stock      Int            @default(0)
+  categoryId String
+  category   Category       @relation(fields: [categoryId], references: [id])
+  images     ProductImage[]
+  createdAt  DateTime       @default(now())
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  url       String // URL ke storage (Cloudflare R2/S3-compatible)
+  isPrimary Boolean @default(false)
+  order     Int     @default(0)
+}
+
+model ApiSetting {
+  id              String   @id @default(cuid())
+  provider        String   @unique // "tripay" | "jnt" | "jne"
+  encryptedConfig String // JSON kredensial terenkripsi AES-256, diisi di Fase 0.6
+  isActive        Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+}
+
+/// Singleton — instance ini HANYA boleh berisi 1 baris. Bukan constraint DB,
+/// dicegah insert baris kedua di level service (Fase 0.5).
+model InstanceSetup {
+  id               String    @id @default(cuid())
+  isInstalled      Boolean   @default(false)
+  licenseKey       String?
+  licenseStatus    String? // active | suspended | expired | unverified
+  lastCheckIn      DateTime?
+  encryptedDataKey String? // ENCRYPTION_KEY internal, dienkripsi pakai MASTER_SECRET dari
+  // env (di-set manual sekali saat deploy, BUKAN ditulis otomatis ke file —
+  // supaya kompatibel di hosting serverless)
+}
