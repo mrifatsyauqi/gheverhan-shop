@@ -8,3 +8,7 @@ package-lock.json
 # project docs authored outside this Prettier setup, not app code
 *.md
 .claude/
+
+# no Prettier parser available for these file types
+*.prisma
+.env*
